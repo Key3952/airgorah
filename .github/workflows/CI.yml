@@ -2,8 +2,6 @@ name: CI & Automated Multi-Distro Release
 
 on:
   push:
-    branches: ['**']
-    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -76,6 +74,7 @@ jobs:
       - name: Auto-increment release version for this push
         id: meta
         run: |
+          git fetch --tags --force || true
           EXISTING_TAGS="$(git tag -l 'v*' || true)"
           EXISTING_TAGS="$EXISTING_TAGS" node scripts/resolve-release-version.mjs
 
@@ -197,7 +196,7 @@ jobs:
           curl -fsS http://127.0.0.1:3456/ | grep -q "Airgorah"
 
   release:
-    name: Publish Full GitHub Release (v${{ needs.package.outputs.version }})
+    name: Publish Full GitHub Release
     runs-on: ubuntu-24.04
     needs: [package, verify-archlinux, verify-debian, verify-fedora]
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'

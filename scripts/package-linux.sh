@@ -136,5 +136,6 @@ RELEASE_VERSION="$VERSION" BUILD_NUMBER="$BUILD_NUM" GITHUB_REPOSITORY="$REPO" \
   node scripts/generate-install-docs.mjs "$OUT_DIR"
 
 rm -rf "$STAGE_DIR" "$ROOT_DIR/.pkg-portable"
+chmod -R a+rX "$OUT_DIR"
 echo "==> Packaging complete. Artifacts in: $OUT_DIR"
 ls -la "$OUT_DIR"
