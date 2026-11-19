@@ -20,8 +20,9 @@ function sha256File(filePath) {
 
 function generateDocs() {
   const version = getVersion();
+  const buildNumber = process.env.BUILD_NUMBER || process.env.GITHUB_RUN_NUMBER || 'local';
   const outDir = path.resolve(process.argv[2] || 'release-artifacts');
-  const repo = process.env.GITHUB_REPOSITORY || 'martin-olivier/airgorah';
+  const repo = process.env.GITHUB_REPOSITORY || 'Key3952/airgorah';
   const tag = process.env.RELEASE_TAG || `v${version}`;
 
   fs.mkdirSync(outDir, { recursive: true });
@@ -52,9 +53,9 @@ function generateDocs() {
 
   const baseDownloadUrl = `https://github.com/${repo}/releases/download/${tag}`;
 
-  const markdown = `# Airgorah v${version} — Linux Installation Guide
+  const markdown = `# Airgorah v${version} (build #${buildNumber}) — Linux Installation Guide
 
-Automated multi-distribution build for **Airgorah v${version}** (\`nodejs\` runtime, architecture-independent).
+Automated multi-distribution release for **Airgorah v${version}** (\`build #${buildNumber}\`, \`nodejs\` runtime, architecture-independent) from \`${repo}\`.
 
 ---
 

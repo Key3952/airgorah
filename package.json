@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 3000",
     "lint": "tsc --noEmit",
-    "test": "npx --yes tsx --test src/lib/channel.test.ts src/lib/auditEngine.test.ts src/lib/launcher.test.ts",
+    "test": "npx --yes tsx --test src/lib/channel.test.ts src/lib/auditEngine.test.ts src/lib/launcher.test.ts src/lib/version.test.ts",
     "package:linux": "bash scripts/package-linux.sh",
     "generate:install-docs": "node scripts/generate-install-docs.mjs"
   },

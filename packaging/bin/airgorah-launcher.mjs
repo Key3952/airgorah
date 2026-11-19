@@ -148,6 +148,20 @@ export function resolveVersion(baseDir = __dirname) {
   return '0.9.0';
 }
 
+export function resolveBuildNumber(baseDir = __dirname) {
+  const candidates = [
+    path.resolve(baseDir, '../build.txt'),
+    path.resolve(baseDir, '../share/airgorah/build.txt'),
+    '/usr/share/airgorah/build.txt',
+  ];
+  for (const candidate of candidates) {
+    if (!fs.existsSync(candidate)) continue;
+    const raw = fs.readFileSync(candidate, 'utf8').trim();
+    if (raw) return raw;
+  }
+  return process.env.BUILD_NUMBER || 'local';
+}
+
 export function resolveSafeAssetPath(distDir, requestUrl) {
   let urlPath;
   try {
@@ -576,6 +590,7 @@ Safety guarantee:
 function main() {
   const rawArgv = process.argv.slice(2);
   const version = resolveVersion();
+  const buildNumber = resolveBuildNumber();
   let opts;
   try {
     opts = parseArgs(rawArgv);
@@ -590,7 +605,7 @@ function main() {
   }
 
   if (opts.showVersion) {
-    console.log(`airgorah ${version}`);
+    console.log(`airgorah ${version} (build #${buildNumber})`);
     process.exit(0);
   }
 

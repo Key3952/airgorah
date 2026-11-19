@@ -4,7 +4,7 @@
  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
 <policyconfig>
   <vendor>Airgorah</vendor>
-  <vendor_url>https://github.com/martin-olivier/airgorah</vendor_url>
+  <vendor_url>https://github.com/Key3952/airgorah</vendor_url>
   <icon_name>airgorah</icon_name>
 
   <action id="com.airgorah.pkexec.run">

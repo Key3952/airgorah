@@ -6,7 +6,7 @@ import type {
   WordlistPreset,
 } from '../types';
 
-export const AIRGORAH_VERSION = '0.9.0';
+export { APP_VERSION as AIRGORAH_VERSION } from './version';
 
 export const DEFAULT_SETTINGS: Settings = {
   macAddress: 'random',

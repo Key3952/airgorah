@@ -42,6 +42,13 @@ import { DecryptModal } from './components/DecryptModal';
 import { DecryptTerminalModal } from './components/DecryptTerminalModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AboutModal } from './components/AboutModal';
+import {
+  APP_BUILD_NUMBER,
+  APP_VERSION,
+  checkForUpdates,
+  formatBuildLabel,
+  type UpdateCheckResult,
+} from './lib/version';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 
 const SETTINGS_STORAGE_KEY = 'airgorah_web_settings_v1';
@@ -126,6 +133,18 @@ export function App() {
   );
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [showAboutModal, setShowAboutModal] = useState<boolean>(false);
+  const [updateCheckResult, setUpdateCheckResult] =
+    useState<UpdateCheckResult | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void checkForUpdates().then((result) => {
+      if (active) setUpdateCheckResult(result);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
   const [toasts, setToasts] = useState<NotificationToast[]>([]);
 
   // Seed pool for re-discovery after Restart Scan
@@ -762,6 +781,20 @@ export function App() {
           >
             Interface: {selectedInterface ? selectedInterface.name : 'none'}
           </button>
+          <button
+            type="button"
+            onClick={() => setShowAboutModal(true)}
+            title="Build version & release update check (Key3952/airgorah)"
+            data-testid="build-version-button"
+            className="inline-flex items-center gap-1.5 text-[#9aa1ae] hover:text-white"
+          >
+            <span>{formatBuildLabel(APP_VERSION, APP_BUILD_NUMBER)}</span>
+            {updateCheckResult?.status === 'update-available' && (
+              <span className="rounded bg-[#e86f33]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#fb923c]">
+                v{updateCheckResult.latestVersion} available
+              </span>
+            )}
+          </button>
         </div>
       </footer>
 
@@ -851,6 +884,8 @@ export function App() {
 
       <AboutModal
         isOpen={showAboutModal}
+        initialUpdateResult={updateCheckResult}
+        onUpdateChecked={(res) => setUpdateCheckResult(res)}
         onClose={() => setShowAboutModal(false)}
       />
     </div>

@@ -9,7 +9,7 @@
 
 ## Overview
 
-Airgorah Web ports the core graphical workflow of [Airgorah](https://github.com/martin-olivier/airgorah) into a lightweight, cross-distribution web workbench backed by a zero-dependency Node.js launcher (`airgorah`), Freedesktop `.desktop` integration, and an optional `systemd` user service.
+Airgorah Web ports the core graphical workflow of [Airgorah](https://github.com/Key3952/airgorah) into a lightweight, cross-distribution web workbench backed by a zero-dependency Node.js launcher (`airgorah`), Freedesktop `.desktop` integration, and an optional `systemd` user service.
 
 ### Features Ported
 
@@ -21,7 +21,7 @@ Airgorah Web ports the core graphical workflow of [Airgorah](https://github.com/
 
 ## Linux Installation (Multi-Distribution)
 
-Every push to `main` and every `v*` tag on GitHub automatically builds, tests (including inside a real `archlinux:latest` container), and publishes packages + `INSTALL.md` + `SHA256SUMS.txt` in **GitHub Releases** and **GitHub Actions Artifacts**.
+Every `git push` to [`Key3952/airgorah`](https://github.com/Key3952/airgorah/releases) automatically increments the release version, verifies packages inside real `archlinux:latest`, `ubuntu-24.04`, and `fedora:latest` containers, and publishes a full **GitHub Release** with `.pkg.tar.zst`, `.deb`, `.rpm`, `.tar.gz`, `PKGBUILD`, `INSTALL.md`, and `SHA256SUMS.txt`.
 
 ### Arch Linux / Manjaro / EndeavourOS / CachyOS
 

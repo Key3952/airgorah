@@ -1,4 +1,4 @@
-name: CI & Multi-Distro Packages
+name: CI & Automated Multi-Distro Release
 
 on:
   push:
@@ -9,6 +9,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: airgorah-release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   test-and-lint:
@@ -33,10 +37,14 @@ jobs:
       - name: TypeScript type check
         run: npm run lint
 
-      - name: Run unit tests (including SIGKILL watchdog auto-restore tests)
+      - name: Run unit tests (channel, audit, Wi-Fi guard SIGKILL watchdog, versioning)
         run: npm run test
 
       - name: Production Vite build
+        env:
+          VITE_BUILD_NUMBER: ${{ github.run_number }}
+          VITE_COMMIT_SHA: ${{ github.sha }}
+          VITE_GITHUB_REPO: ${{ github.repository }}
         run: npm run build
 
       - name: Smoke-test Linux launcher
@@ -51,39 +59,37 @@ jobs:
           curl -fsSI http://127.0.0.1:3456/app_icon.png | grep -qi "image/png"
 
   package:
-    name: Build Linux Packages (.pkg.tar.zst, .deb, .rpm, .tar.gz)
+    name: Build Release Packages (.pkg.tar.zst, .deb, .rpm, .tar.gz)
     runs-on: ubuntu-24.04
     needs: test-and-lint
 
     outputs:
       version: ${{ steps.meta.outputs.version }}
       release_tag: ${{ steps.meta.outputs.release_tag }}
+      build_number: ${{ steps.meta.outputs.build_number }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Resolve package version & release tag
+      - name: Auto-increment release version for this push
         id: meta
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            VERSION="${GITHUB_REF_NAME#v}"
-            TAG="${GITHUB_REF_NAME}"
-          else
-            VERSION="$(node -p "require('./package.json').version")"
-            TAG="latest"
-          fi
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "release_tag=${TAG}" >> "$GITHUB_OUTPUT"
+          EXISTING_TAGS="$(git tag -l 'v*' || true)"
+          EXISTING_TAGS="$EXISTING_TAGS" node scripts/resolve-release-version.mjs
 
       - name: Build packaging container image
         run: docker build . -t airgorah_packager
 
-      - name: Build multi-distro packages and install guide
+      - name: Build multi-distro release packages and install guide
         run: |
           mkdir -p release-artifacts
           docker run --rm \
             -e RELEASE_VERSION="${{ steps.meta.outputs.version }}" \
             -e RELEASE_TAG="${{ steps.meta.outputs.release_tag }}" \
+            -e BUILD_NUMBER="${{ steps.meta.outputs.build_number }}" \
+            -e COMMIT_SHA="${{ github.sha }}" \
             -e GITHUB_REPOSITORY="${{ github.repository }}" \
             -v "${{ github.workspace }}:/workspace" \
             airgorah_packager
@@ -127,8 +133,8 @@ jobs:
           test -f /usr/share/icons/hicolor/256x256/apps/airgorah.png
           test -f /usr/lib/systemd/user/airgorah.service
           test -f /usr/lib/systemd/system/airgorah-restore.service
-          airgorah --version
-          /bin/airgorah --version
+          airgorah --version | grep -q "${{ needs.package.outputs.version }}"
+          /bin/airgorah --version | grep -q "${{ needs.package.outputs.version }}"
           airgorah --restore --quiet
           airgorah --no-open --host 127.0.0.1 --port 3456 &
           SERVER_PID=$!
@@ -156,7 +162,7 @@ jobs:
           sudo apt-get install -y "./release-artifacts/airgorah_${{ needs.package.outputs.version }}_all.deb"
           test -f /usr/share/polkit-1/actions/com.airgorah.pkexec.policy
           test -f /usr/lib/systemd/system/airgorah-restore.service
-          airgorah --version
+          airgorah --version | grep -q "${{ needs.package.outputs.version }}"
           airgorah --no-open --host 127.0.0.1 --port 3456 &
           SERVER_PID=$!
           trap "kill $SERVER_PID 2>/dev/null || true" EXIT
@@ -183,7 +189,7 @@ jobs:
           dnf install -y curl "./release-artifacts/airgorah_${{ needs.package.outputs.version }}_noarch.rpm"
           test -f /usr/share/polkit-1/actions/com.airgorah.pkexec.policy
           test -f /usr/lib/systemd/system/airgorah-restore.service
-          airgorah --version
+          airgorah --version | grep -q "${{ needs.package.outputs.version }}"
           airgorah --no-open --host 127.0.0.1 --port 3456 &
           SERVER_PID=$!
           trap "kill $SERVER_PID 2>/dev/null || true" EXIT
@@ -191,12 +197,10 @@ jobs:
           curl -fsS http://127.0.0.1:3456/ | grep -q "Airgorah"
 
   release:
-    name: Publish GitHub Release & Distro Instructions
+    name: Publish Full GitHub Release (v${{ needs.package.outputs.version }})
     runs-on: ubuntu-24.04
     needs: [package, verify-archlinux, verify-debian, verify-fedora]
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
 
@@ -207,12 +211,13 @@ jobs:
           name: airgorah-linux-packages-${{ needs.package.outputs.version }}
           path: release-artifacts
 
-      - name: Publish GitHub Release with packages and install instructions
+      - name: Publish full GitHub Release with packages and install instructions
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.package.outputs.release_tag }}
-          name: ${{ startsWith(github.ref, 'refs/tags/v') && format('Airgorah v{0}', needs.package.outputs.version) || format('Airgorah Latest Build (v{0})', needs.package.outputs.version) }}
-          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          name: Airgorah v${{ needs.package.outputs.version }} (build #${{ needs.package.outputs.build_number }})
+          prerelease: false
+          make_latest: true
           body_path: release-artifacts/INSTALL.md
           fail_on_unmatched_files: true
           files: |
