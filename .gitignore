@@ -6,12 +6,19 @@
 *~
 \#*
 
-# Build Folder
+# Dependencies & Build Output
 
+node_modules/
+dist/
 /target
+release-artifacts/
+.pkg-stage/
+.pkg-portable/
+.playwright-cli/
 
 # Build artifacts
 
 *.deb
 *.rpm
 *.tar.zst
+*.pkg.tar.zst

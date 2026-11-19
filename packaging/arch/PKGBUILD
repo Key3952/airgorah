@@ -1,0 +1,68 @@
+# Maintainer: Airgorah Maintainers
+pkgname=airgorah
+pkgver=0.9.0
+pkgrel=1
+pkgdesc="WiFi security auditing workbench with crash-proof Wi-Fi auto-restore"
+arch=('any')
+url="https://github.com/martin-olivier/airgorah"
+license=('MIT')
+depends=('nodejs')
+makedepends=('npm')
+optdepends=(
+  'iw: switch wireless adapters between monitor and managed modes'
+  'iproute2: configure link state and restore hardware MAC addresses'
+  'polkit: graphical password prompt (pkexec) for Wi-Fi capture privileges'
+  'networkmanager: cleanly detach and reconnect Wi-Fi without breaking Ethernet/VPN'
+  'xdg-utils: automatically open Airgorah in the default browser'
+)
+source=()
+sha256sums=()
+
+build() {
+  local root_dir="${startdir}/../.."
+  if [[ ! -f "${root_dir}/package.json" ]]; then
+    echo "Error: Run makepkg from packaging/arch inside the cloned Airgorah repository, or install the prebuilt .pkg.tar.zst with pacman -U." >&2
+    return 1
+  fi
+  cd "${root_dir}"
+  if [[ -f package-lock.json ]]; then
+    npm ci --no-audit --no-fund
+  else
+    npm install --no-audit --no-fund
+  fi
+  npm run build
+}
+
+package() {
+  local root_dir="${startdir}/../.."
+
+  install -Dm755 "${root_dir}/packaging/bin/airgorah" \
+    "${pkgdir}/usr/bin/airgorah"
+
+  install -Dm755 "${root_dir}/packaging/bin/airgorah-launcher.mjs" \
+    "${pkgdir}/usr/share/airgorah/bin/airgorah-launcher.mjs"
+  install -Dm644 "${root_dir}/packaging/bin/wifi-guard.mjs" \
+    "${pkgdir}/usr/share/airgorah/bin/wifi-guard.mjs"
+
+  install -dm755 "${pkgdir}/usr/share/airgorah/dist"
+  cp -r "${root_dir}/dist/." "${pkgdir}/usr/share/airgorah/dist/"
+  printf '%s\n' "${pkgver}" > "${pkgdir}/usr/share/airgorah/version.txt"
+
+  install -Dm644 "${root_dir}/packaging/airgorah.desktop" \
+    "${pkgdir}/usr/share/applications/airgorah.desktop"
+
+  install -Dm644 "${root_dir}/packaging/com.airgorah.pkexec.policy" \
+    "${pkgdir}/usr/share/polkit-1/actions/com.airgorah.pkexec.policy"
+
+  install -Dm644 "${root_dir}/public/app_icon.png" \
+    "${pkgdir}/usr/share/icons/hicolor/256x256/apps/airgorah.png"
+
+  install -Dm644 "${root_dir}/packaging/airgorah.service" \
+    "${pkgdir}/usr/lib/systemd/user/airgorah.service"
+
+  install -Dm644 "${root_dir}/packaging/airgorah-restore.service" \
+    "${pkgdir}/usr/lib/systemd/system/airgorah-restore.service"
+
+  install -Dm644 "${root_dir}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

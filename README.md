@@ -1,58 +1,101 @@
 <h1 align="center">
-  <img src="crates/gui/icons/app_icon.png" width=100 height=100/><br>
-Airgorah</h1>
+  <img src="public/app_icon.png" width="96" height="96" alt="Airgorah logo" /><br>
+  Airgorah
+</h1>
 
 <p align="center">
-  <span>A WiFi security auditing software</span>
+  <span>WiFi security auditing workbench — React + TypeScript + Vite web edition</span>
 </p>
 
-<p align="center">
-  <a href="https://github.com/martin-olivier/airgorah/wiki/Installation">Installation</a>
-  &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/martin-olivier/airgorah/wiki/Usage">Usage</a>
-  &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/martin-olivier/airgorah/wiki/Credits">Credits</a>
-</p>
+## Overview
 
-![illustration](.github/assets/illustration.png)
+Airgorah Web ports the core graphical workflow of [Airgorah](https://github.com/martin-olivier/airgorah) into a lightweight, cross-distribution web workbench backed by a zero-dependency Node.js launcher (`airgorah`), Freedesktop `.desktop` integration, and an optional `systemd` user service.
 
-[![crates](https://img.shields.io/crates/v/airgorah.svg)](https://crates.io/crates/airgorah)
-[![aur](https://img.shields.io/aur/version/airgorah)](https://aur.archlinux.org/packages/airgorah)
-[![ci](https://github.com/martin-olivier/airgorah/actions/workflows/CI.yml/badge.svg)](https://github.com/martin-olivier/airgorah/actions/workflows/CI.yml)
+### Features Ported
 
-`Airgorah` is a WiFi security auditing software that can capture nearby WiFi traffic, discover clients connected to access points, perform deauthentication attacks, capture handshakes and PMKIDs, and crack the password of access points.
+- **Wireless Scanning & Split-Pane Workbench**: High-density sortable Access Points and Clients tables with draggable vertical pane split, live channel hopping, RSSI updates, and right-click copy context menus.
+- **Band & Channel Filter Validation**: Full 2.4 GHz and 5 GHz channel filter validation, single-channel focus, channel hop list addition, and automatic channel locking/parking during active attacks.
+- **Deauthentication & PMKID Solicitation**: Configurable deauth modal (packet rate, disassociation frames, all vs. selected clients), clientless PMKID solicitation, red/blue attack row highlights, and simulated 4-way handshake / PMKID capture notifications.
+- **WPA Decryption Workbench**: Dictionary and Bruteforce decryption modes (including custom charset deduplication, password length bounds, and built-in or uploaded wordlists) with an interactive `aircrack-ng` / `crunch` terminal view.
+- **Exports & Preferences**: Downloadable libpcap v2.4 (`.cap`) capture files, Airgorah-compatible `.json` scan reports, wireless interface selection (with 5 GHz capability enforcement), and persistent MAC / display / process settings.
 
-It is written in Rust and uses [GTK4](https://github.com/gtk-rs/gtk4-rs) for the graphical part.
+## Linux Installation (Multi-Distribution)
 
-`⭐ Don't forget to put a star if you like the project!`
+Every push to `main` and every `v*` tag on GitHub automatically builds, tests (including inside a real `archlinux:latest` container), and publishes packages + `INSTALL.md` + `SHA256SUMS.txt` in **GitHub Releases** and **GitHub Actions Artifacts**.
 
-## Legal
+### Arch Linux / Manjaro / EndeavourOS / CachyOS
 
-⚠️ Airgorah is designed to be used in testing and discovering flaws in networks you are owner of. Performing attacks on WiFi networks you are not owner of is illegal in almost all countries. I am not responsible for whatever damage you may cause by using this software.
+**Option 1 — Prebuilt Pacman package (`.pkg.tar.zst`):**
+```bash
+sudo pacman -S --needed nodejs xdg-utils
+sudo pacman -U --noconfirm ./airgorah_<version>_any.pkg.tar.zst
+airgorah
+```
 
-## Requirements
+**Option 2 — Build locally with `makepkg` (`PKGBUILD`):**
+```bash
+cd packaging/arch
+makepkg -si
+airgorah
+```
 
-This software only works on `linux`. The graphical interface runs as a normal
-user (so it works under both `X11` and `Wayland`). When a privileged operation is
-needed, it launches a small privileged agent (`airgorah-agent`) via `polkit`,
-which will prompt for authentication once.
+### Debian / Ubuntu / Kali / Linux Mint / Pop!_OS
 
-You will also need a wireless network card that supports `monitor mode` and `packet injection`.
+```bash
+sudo apt update
+sudo apt install -y ./airgorah_<version>_all.deb
+airgorah
+```
 
-## Installation
+### Fedora / RHEL / Rocky Linux / AlmaLinux
 
-The installation instructions are available [here](https://github.com/martin-olivier/airgorah/wiki/Installation).
+```bash
+sudo dnf install -y ./airgorah_<version>_noarch.rpm
+airgorah
+```
 
-## Usage
+### openSUSE Tumbleweed / Leap
 
-The documentation about the usage of the application is available [here](https://github.com/martin-olivier/airgorah/wiki/Usage).
+```bash
+sudo zypper --no-gpg-checks install -y ./airgorah_<version>_noarch.rpm
+airgorah
+```
+
+### Universal Linux Portable Tarball (Alpine, Void, Gentoo, NixOS)
+
+```bash
+tar -xzf airgorah_<version>_linux_portable.tar.gz
+cd airgorah-<version>
+./bin/airgorah
+```
+
+### Optional Background Service (systemd)
+
+```bash
+systemctl --user enable --now airgorah.service
+```
+
+## Easy Root Elevation & Crash-Proof Wi-Fi Auto-Restore
+
+- **Desktop (GUI)**: Clicking **Airgorah** in your application launcher uses the bundled PolicyKit policy (`pkexec`) to ask for your password once (if you cancel, it falls back cleanly to unprivileged UI mode). The web browser always opens as your normal desktop user, never as `root`.
+- **Terminal**: Run `airgorah --sudo` or `airgorah --iface wlan0` to automatically elevate via `sudo` / `doas` / `pkexec`.
+- **Guaranteed Wi-Fi Restoration (even after `kill -9` or power loss)**:
+  1. **Atomic Snapshot**: Records original interface mode, permanent hardware MAC, link state, and NetworkManager / `iwd` / `wpa_supplicant` ownership before touching the adapter.
+  2. **Per-Adapter Isolation**: Detaches only the captured Wi-Fi interface (`nmcli device set <iface> managed no`) instead of killing NetworkManager globally, keeping Ethernet/VPN/other interfaces online.
+  3. **Independent Root Watchdog**: Monitors Airgorah's PID + `/proc/<pid>/stat` start time. If Airgorah exits cleanly, crashes, loses its terminal, gets OOM-killed, or is terminated with `kill -9`, the watchdog immediately restores `managed` mode, original MAC, link `UP`, and NetworkManager/`iwd` reconnection.
+  4. **Boot-Time & Manual Recovery**: Enable `sudo systemctl enable airgorah-restore.service` to recover even after a sudden power cut, or run `airgorah --restore` at any time.
+
+## Development
+
+```bash
+npm install
+npm run dev            # Starts Vite dev server on http://0.0.0.0:3000
+npm run test           # Runs unit tests (channel, audit engine, Linux launcher)
+npm run lint           # TypeScript strict type-checking
+npm run build          # Production build
+npm run package:linux  # Builds Linux packages + INSTALL.md into release-artifacts/
+```
 
 ## License
 
-This project is released under [MIT](LICENSE) license.
-
-## Contributing
-
-If you have any question about the usage of the application, do not hesitate to open a [discussion](https://github.com/martin-olivier/airgorah/discussions)
-
-If you want to report a bug or provide a feature, do not hesitate to open an [issue](https://github.com/martin-olivier/airgorah/issues) or submit a [pull request](https://github.com/martin-olivier/airgorah/pulls)
+MIT License — see [LICENSE](LICENSE).

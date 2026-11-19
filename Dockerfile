@@ -1,31 +1,20 @@
-FROM rust:1.94.1-slim-bookworm
+FROM node:22-bookworm-slim
 
-# Fetch package list
-RUN apt update
-
-# Install build dependencies
-RUN apt install -y build-essential libgtk-4-dev libglib2.0-dev
-
-# Install packaging tools
-RUN apt install -y ruby ruby-dev rubygems rpm zstd libarchive-tools
-
-# Install fpm
-RUN gem install fpm
-
-# Install rustup components
-RUN rustup component add clippy
-RUN rustup component add rustfmt
-
-##### Commands #####
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    ca-certificates \
+    build-essential \
+    ruby \
+    ruby-dev \
+    rubygems \
+    rpm \
+    zstd \
+    libarchive-tools \
+    tar \
+    gzip \
+  && gem install --no-document fpm \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
 
-ENV DEBIAN_DEPS="--depends libgtk-4-1 --depends dbus-x11 --depends iproute2 --depends crunch --deb-recommends aircrack-ng"
-ENV REDHAT_DEPS="--depends gtk4-devel --depends dbus-x11 --depends iproute --rpm-tag Recommends:aircrack-ng"
-ENV ARCHLINUX_DEPS="--depends gtk4 --depends dbus --depends iproute2 --pacman-optional-depends aircrack-ng"
-
-# Build and package the project
-CMD cargo build && \
-    fpm -f -t deb -p airgorah_`arch`.deb -a native $DEBIAN_DEPS && \
-    fpm -f -t rpm -p airgorah_`arch`.rpm -a native $REDHAT_DEPS && \
-    fpm -f -t pacman -p airgorah_`arch`.pkg.tar.zst -a native $ARCHLINUX_DEPS
+CMD ["bash", "-c", "if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi && bash scripts/package-linux.sh /workspace/release-artifacts"]

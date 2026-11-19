@@ -1,0 +1,14 @@
+[Unit]
+Description=Airgorah Boot-Time Wi-Fi Crash Recovery
+DefaultDependencies=no
+ConditionPathExists=/var/lib/airgorah/pending-restore.json
+Before=network-pre.target NetworkManager.service iwd.service
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/airgorah --restore --quiet
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target

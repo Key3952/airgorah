@@ -1,0 +1,12 @@
+[Unit]
+Description=Airgorah WiFi Security Auditing Workbench
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/airgorah --no-open --host 127.0.0.1 --port 3000
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

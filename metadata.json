@@ -1,0 +1,5 @@
+{
+  "name": "Airgorah",
+  "description": "WiFi security auditing workbench for wireless access point scanning, station discovery, deauthentication testing, handshake and PMKID capture, and WPA decryption workflows.",
+  "requestFramePermissions": []
+}

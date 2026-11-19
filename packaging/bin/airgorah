@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+set -eu
+SELF_PATH="$(readlink -f -- "$0" 2>/dev/null || printf '%s' "$0")"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$SELF_PATH")" && pwd)"
+if [ -f "${SCRIPT_DIR}/../share/airgorah/bin/airgorah-launcher.mjs" ]; then
+  exec node "${SCRIPT_DIR}/../share/airgorah/bin/airgorah-launcher.mjs" "$@"
+fi
+exec node /usr/share/airgorah/bin/airgorah-launcher.mjs "$@"

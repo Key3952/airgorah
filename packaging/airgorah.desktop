@@ -1,0 +1,22 @@
+[Desktop Entry]
+Type=Application
+Name=Airgorah
+GenericName=WiFi Security Auditing Workbench
+Comment=WiFi security auditing workbench with crash-proof Wi-Fi auto-restore
+Exec=/usr/bin/airgorah --elevate --allow-fallback
+Icon=airgorah
+Terminal=false
+Categories=Network;Security;Utility;
+Keywords=wifi;wireless;security;audit;wpa;handshake;pmkid;
+StartupNotify=false
+Actions=SafeMode;RestoreWifi;
+
+[Desktop Action SafeMode]
+Name=Launch without root (Safe UI mode)
+Name[ru]=Запустить без прав root (безопасный режим)
+Exec=/usr/bin/airgorah --no-elevate
+
+[Desktop Action RestoreWifi]
+Name=Restore Wi-Fi & Internet Now
+Name[ru]=Восстановить Wi-Fi и интернет сейчас
+Exec=/usr/bin/airgorah --restore

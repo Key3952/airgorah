@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Airgorah</vendor>
+  <vendor_url>https://github.com/martin-olivier/airgorah</vendor_url>
+  <icon_name>airgorah</icon_name>
+
+  <action id="com.airgorah.pkexec.run">
+    <description>Run Airgorah with Wi-Fi capture privileges</description>
+    <description xml:lang="ru">Запустить Airgorah с правами захвата Wi-Fi модуля</description>
+    <message>Authentication is required to grant Airgorah privileges to capture a Wi-Fi interface. Your Wi-Fi adapter will be automatically restored on exit or crash.</message>
+    <message xml:lang="ru">Требуется аутентификация для выдачи Airgorah прав захвата Wi-Fi модуля. При любом закрытии или сбое адаптер будет автоматически возвращён в исходное состояние.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/airgorah</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>
